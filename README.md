@@ -1,12 +1,6 @@
-# Heroku buildpack: Meteorite
-
-This build pack allows you to easily deploy meteor apps to heroku using [meteorite](http://github.com/oortcloud/meteorite). It's easy to use different branches of meteor and any smart package you can lay your hands on.
+# Heroku buildpack: Meteor 0.9.2.2
 
 ## Usage
-
-```bash
-heroku create --stack cedar --buildpack https://github.com/oortcloud/heroku-buildpack-meteorite.git
-```
 
 Then `git push` to heroku as usual.
 
@@ -23,8 +17,6 @@ You can specify meteor settings by setting the `METEOR_SETTINGS` environment var
 ```bash
 heroku config:add METEOR_SETTINGS='{"herp":"derp"}'
 ```
-
-
 You need to have a verified account so the buildpack can add a `mongohq:sandbox` addon.
 
 ## Websockets
