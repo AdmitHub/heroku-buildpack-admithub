@@ -14,7 +14,6 @@ BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
 # parse and derive params
 BUILD_DIR=$1
 CACHE_DIR=$2
-METEOR_BUILD_DIR=".meteor/heroku_build"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 [ ! -d $BUILD_DIR ] && mkdir $BUILD_DIR
@@ -102,13 +101,22 @@ export npm_config_prefix="$VENDORED_MODULES"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
-
 ############################################
-# install meteor + packages
+# install meteorite
+############################################
+echo "-----> Installing meteorite with npm"
+
+run_npm "install meteorite fibers -g"
+echo "Meteorite installed" | indent
+
+METEOR_BUILD_DIR="$BUILD_DIR/.meteor/heroku_build"
+mkdir -p "$HOME"
+############################################
+# install meteor + packages through mrt
 # bundle, and install into app/
 ############################################
 cd $BUILD_DIR
-echo "Installing meteor. BUILD_DIR: $BUILD_DIR" | indent
+echo "Installing meteor" | indent
 
 # Using different folder to prevent install script form deleting packages file
 VENDORED_METEOR="$(mktmpdir meteor)"
@@ -117,17 +125,13 @@ echo "Meteor installed" | indent
 
 echo "Installing packages" | indent
 
-METEOR="$VENDORED_METEOR"/.meteor/meteor
-
-cd $BUILD_DIR
-$METEOR remove npm-container | indent # remove npm-container first.
-$METEOR | indent # now initialize npm stuff.
+HOME="$BUILD_DIR" mrt install --force | indent
 echo "Building meteor bundle" | indent
-$METEOR build "$CACHE_DIR"/bundle --directory | indent
+HOME="$VENDORED_METEOR" "$VENDORED_METEOR"/.meteor/meteor bundle "$CACHE_DIR"/bundle.tar.gz 2>
 
-mkdir -p "$METEOR_BUILD_DIR"
-mv "$CACHE_DIR"/bundle/bundle "$METEOR_BUILD_DIR"/app
-############################################
+mkdir -p "$METEOR_BUILD_DIR"/app
+tar -zxf "$CACHE_DIR"/bundle.tar.gz --strip-components 1 -C "$METEOR_BUILD_DIR"/app
+rm "$CACHE_DIR"/bundle.tar.gz
 
 ############################################
 # Install some binary dependencies
@@ -156,3 +160,14 @@ EOF
 echo "-----> Vendoring node into slug"
 mkdir -p "$METEOR_BUILD_DIR/bin"
 cp "$VENDORED_NODE/bin/node" "$METEOR_BUILD_DIR/bin/node"
+
+############################################
+# Run npm install beforein order to ensure fibers and others npm packages used by meteor are i
+# as stated in meteor docs: http://docs.meteor.com/#deploying
+############################################
+echo "-----> Move to app directory: /programs/server"
+cd "$METEOR_BUILD_DIR"/app/programs/server
+
+echo "-----> Run npm install"
+npm install
+
