@@ -14,7 +14,7 @@ BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
 # parse and derive params
 BUILD_DIR=$1
 CACHE_DIR=$2
-METEOR_BUILD_DIR=".meteor/heroku_build/"
+METEOR_BUILD_DIR=".meteor/heroku_build"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 [ ! -d $BUILD_DIR ] && mkdir $BUILD_DIR
@@ -125,6 +125,7 @@ $METEOR | indent # now initialize npm stuff.
 echo "Building meteor bundle" | indent
 $METEOR build "$CACHE_DIR"/bundle --directory | indent
 
+mkdir -p "$METEOR_BUILD_DIR"
 mv "$CACHE_DIR"/bundle/bundle "$METEOR_BUILD_DIR"/app
 ############################################
 
